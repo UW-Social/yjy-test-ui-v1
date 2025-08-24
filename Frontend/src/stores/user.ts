@@ -85,8 +85,10 @@ export const useUserStore = defineStore('user', () => {
       await setPersistence(auth, browserLocalPersistence);
 
       const result = await signInWithPopup(auth, provider);
-      userProfile.value = result.user as UserProfile;
-      isLoggedIn.value = true;
+      
+      // 不要直接设置userProfile，让onAuthStateChanged处理
+      // 这样可以确保正确的用户文档创建和photoURL保存
+      
       return result.user;
     } catch (error) {
       console.error('登录失败:', error);
@@ -124,6 +126,29 @@ export const useUserStore = defineStore('user', () => {
     }
   };
 
+  const fetchUserProfile = async (): Promise<UserProfile | null> => {
+    if (!userProfile.value?.uid) {
+      console.error('[UserStore] No user is logged in.');
+      return null;
+    }
+
+    try {
+      const userRef = doc(db, 'users', userProfile.value.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        userProfile.value = userDoc.data() as UserProfile;
+        return userProfile.value;
+      } else {
+        console.error('[UserStore] User profile not found in Firestore.');
+        return null;
+      }
+    } catch (error) {
+      console.error('[UserStore] Failed to fetch user profile:', error);
+      throw error;
+    }
+  };
+
   // 判断是否为当前用户
   const isOwner = (uid: string) => {
     return userProfile.value?.uid === uid;
@@ -157,6 +182,7 @@ export const useUserStore = defineStore('user', () => {
     updateUserProfile,
     loadUser,
     isOwner,
-    setDefaultUserData
+    setDefaultUserData,
+    fetchUserProfile
   };
 });

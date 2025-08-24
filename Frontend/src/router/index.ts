@@ -6,21 +6,21 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: isMobile()
-      ? () => import('@/components/mobile/MobileHome.vue')
-      : () => import('@/views/Home.vue')
+    component: () => import('@/views/Home.vue')
   },
   {
     path: '/login',
     name: 'Login',
     component: isMobile()
-      ? () => import('@/components/mobile/MobileLogin.vue')
+      ? () => import('@/views/Login.vue')
       : () => import('@/views/Login.vue')
   },
   {
     path: '/profile',
     name: 'Profile',
-    component: () => import('../views/Profile.vue'),
+    component: isMobile() 
+      ? () => import('@/components/mobile/MobileProfile.vue') 
+      : () => import('../views/Profile.vue'),
     meta: { requiresAuth: true }
   },
   {

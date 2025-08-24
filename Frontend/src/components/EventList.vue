@@ -1,13 +1,13 @@
 <template>
   <div class="event-list">
-    <div v-if="filteredEvents.length === 0" class="loading">No events found. You may need a VPN.</div>
+    <div v-if="filteredEvents.length === 0" class="loading">Loading events...</div>
     <div v-else class="events-grid">
       <EventCard
         v-for="event in filteredEvents"
         :key="event.id"
         :event="event"
         :currentUserId="userStore.userProfile?.uid"
-        @open-card="$emit('open-card', event)"
+        @click="$emit('open-card', event); console.log('[EventList.vue] open-card emitted with event:', event)"
       />
     </div>
   </div>
@@ -21,6 +21,7 @@ import EventCard from './EventCard.vue';
 import { useRoute } from 'vue-router';
 import { useUserStore } from '../stores/user';
 import { getPhraseVec, getPhraseVecBatch } from './models/embedding_distance';
+import { formatEventSchedule, type Event } from '../types/event';
 
 const props = defineProps<{ category?: string }>();
 const eventStore = useEventStore();
@@ -31,7 +32,7 @@ function sortEventsByStartTimeDesc(events: any[]) {
   return events.slice().sort((a, b) => {
     const toDate = (val: any) =>
       typeof val?.toDate === 'function' ? val.toDate() : new Date(val);
-    return toDate(b.startime).getTime() - toDate(a.startime).getTime();
+    return toDate(b.startTime).getTime() - toDate(a.startTime).getTime();
   });
 }
 
@@ -122,6 +123,7 @@ async function makeInterestTagEventsFirstSemantic(events: any[]){
 const eventsAfterSemantic = ref<any[]>([]);
 
 async function refreshEvents() {
+  console.log('[EventList.vue] refreshEvents called');
   let events = !props.category
     ? eventStore.events
     : eventStore.events.filter(e => e.category.toUpperCase() === props.category?.toUpperCase());
@@ -182,6 +184,16 @@ onMounted(async () => {
   }
   refreshEvents(); // now events are loaded
 });
+
+const isVisible = ref(false); // 控制 DetailCard 的显示状态
+
+const showDetailCard = () => {
+  isVisible.value = true; // 显示 DetailCard
+};
+
+const hideDetailCard = () => {
+  isVisible.value = false; // 隐藏 DetailCard
+};
 </script>
 
 <style scoped>
@@ -199,24 +211,16 @@ onMounted(async () => {
 
 .events-grid {
     display: grid;
-    grid-template-columns: repeat(1, 1fr); /* 固定3列 */
+    grid-template-columns: repeat(1, 1fr); /* 固定1列 */
     gap: 2.1rem 1.5rem;
     width: 100%;
     box-sizing: border-box;
     padding: 0;
 }
 
-@media (max-width: 900px) {
-    .events-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
 @media (max-width: 576px) {
-    .event-list {
-        padding: 0.2rem; /* 左右边距几乎为0 */
-    }
     .events-grid {
-        grid-template-columns: repeat(2, 1fr);
+        /* grid-template-columns: repeat(2, 1fr); */
         gap: 1rem 0.5rem;
         width: 100%;
         box-sizing: border-box;
