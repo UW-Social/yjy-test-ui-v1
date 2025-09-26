@@ -9,7 +9,6 @@ import {
   User,
   setPersistence,
   browserLocalPersistence,
-  signInWithRedirect
 } from 'firebase/auth';
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -22,49 +21,30 @@ export const useUserStore = defineStore('user', () => {
 
   let hasInitialized = false;
 
-  // Promise to ensure components can await user loading
   const loadUser = async (): Promise<void> => {
     if (hasInitialized) return;
     hasInitialized = true;
 
     return new Promise((resolve) => {
+      console.log('Attempting to load user...');
       onAuthStateChanged(auth, async (user: User | null) => {
         console.log('Auth state changed:', user);
+
         isLoggedIn.value = !!user;
 
         if (user) {
-          console.log('User logged in:', user);
           try {
             const userRef = doc(db, 'users', user.uid);
             const userDoc = await getDoc(userRef);
 
-            const lastSignInTime = user.metadata?.lastSignInTime || new Date().toISOString();
-
             if (userDoc.exists()) {
-              // 更新 lastSignInTime
-              await updateDoc(userRef, {
-                'metadata.lastSignInTime': lastSignInTime
-              });
               userProfile.value = userDoc.data() as UserProfile;
-              // 手动同步最新 lastSignInTime 到本地
-              if (userProfile.value.metadata) {
-                userProfile.value.metadata.lastSignInTime = lastSignInTime;
-              }
             } else {
-              // 文档不存在，创建默认文档
               const plainUser = {
                 uid: user.uid,
                 email: user.email,
                 displayName: user.displayName,
                 photoURL: user.photoURL,
-                emailVerified: user.emailVerified,
-                grade: '',
-                major: '',
-                tags: [],
-                metadata: {
-                  creationTime: user.metadata?.creationTime || new Date().toISOString(),
-                  lastSignInTime: lastSignInTime,
-                },
               };
               await setDoc(userRef, plainUser);
               userProfile.value = plainUser as UserProfile;
@@ -87,14 +67,39 @@ export const useUserStore = defineStore('user', () => {
 
       await setPersistence(auth, browserLocalPersistence);
 
-      await signInWithRedirect(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+      console.log('Google 登录成功:', user);
+
+      isLoggedIn.value = !!user;
+      userProfile.value = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+      };
+
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        const plainUser = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        };
+        await setDoc(userRef, plainUser);
+      }
+
+      console.log('用户信息已保存到 Firestore');
     } catch (error) {
-      console.error('登录失败:', error);
+      console.error('Google 登录失败:', error);
       throw error;
     }
   };
 
-  // 退出登录
   const logout = async () => {
     try {
       await signOut(auth);
@@ -106,81 +111,11 @@ export const useUserStore = defineStore('user', () => {
     }
   };
 
-  // 更新用户资料
-  const updateUserProfile = async (profile: Partial<UserProfile>) => {
-    if (!userProfile.value?.uid) return;
-
-    try {
-      const userRef = doc(db, 'users', userProfile.value.uid);
-      await updateDoc(userRef, profile);
-
-      userProfile.value = {
-        ...userProfile.value,
-        ...profile
-      };
-    } catch (error) {
-      console.error('更新用户资料失败:', error);
-      throw error;
-    }
-  };
-
-  const fetchUserProfile = async (): Promise<UserProfile | null> => {
-    if (!userProfile.value?.uid) {
-      console.error('[UserStore] No user is logged in.');
-      return null;
-    }
-
-    try {
-      const userRef = doc(db, 'users', userProfile.value.uid);
-      const userDoc = await getDoc(userRef);
-
-      if (userDoc.exists()) {
-        userProfile.value = userDoc.data() as UserProfile;
-        return userProfile.value;
-      } else {
-        console.error('[UserStore] User profile not found in Firestore.');
-        return null;
-      }
-    } catch (error) {
-      console.error('[UserStore] Failed to fetch user profile:', error);
-      throw error;
-    }
-  };
-
-  // 判断是否为当前用户
-  const isOwner = (uid: string) => {
-    return userProfile.value?.uid === uid;
-  };
-
-  // 设置默认用户数据
-  const setDefaultUserData = async () => {
-    if (!userProfile.value?.uid) return;
-
-    try {
-      const userRef = doc(db, 'users', userProfile.value.uid);
-      await setDoc(userRef, {
-        email: userProfile.value.email,
-        displayName: userProfile.value.displayName,
-        grade: 'freshman',
-        major: '',
-        tags: [],
-        // ...其他字段
-      }, { merge: true });
-    } catch (error) {
-      console.error('设置默认用户数据失败:', error);
-      throw error;
-    }
-  };
-
   return {
     isLoggedIn,
     userProfile,
     loginWithGoogle,
     logout,
-    updateUserProfile,
     loadUser,
-    isOwner,
-    setDefaultUserData,
-    fetchUserProfile
   };
 });
