@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 活动集合的规则（event-posters）
+    match /event-posters/{document=**} {
+      // 所有人都可以读取活动列表和详情
+      allow read: if true;
+
+      // 只有登录用户可以创建活动
+      allow create: if request.auth != null;
+
+      // 只有活动创建者可以更新活动
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.organizerId;
+
+      // 只有活动创建者可以删除活动
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.organizerId;
+    }
+    
+    // 用户集合的规则
+    match /users/{userId} {
+      // 只有登录用户可以读取自己的用户信息
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // 只有登录用户可以创建、更新或删除自己的用户信息
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
