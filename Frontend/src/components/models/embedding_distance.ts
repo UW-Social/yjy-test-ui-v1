@@ -30,6 +30,7 @@ let tokenizerPromise: Promise<any> | null = null;
 export function getTokenizer(modelName?: string) {
   if (cachedTokenizer) return Promise.resolve(cachedTokenizer);
 
+  console.log("checking tok promise");
   if (!tokenizerPromise) {
     tokenizerPromise = AutoTokenizer.from_pretrained(modelName ?? 'sentence-transformers/paraphrase-MiniLM-L3-v2')
       .then((tok) => {
@@ -39,6 +40,7 @@ export function getTokenizer(modelName?: string) {
       });
   }
 
+  console.log("loaded token");
   return tokenizerPromise;
 }
 
@@ -50,10 +52,14 @@ export async function getSession(modelPath?: string): Promise<ort.InferenceSessi
 
   await initializeORT(); // Ensure ORT is initialized before creating session
 
+  console.log("Checking promise");
+
   if (!sessionPromise) {
     sessionPromise = ort.InferenceSession.create(modelPath ?? '/models/model_qint8_arm64.onnx')
       .then((session) => {
+        console.log("Beginning session creation");
         cachedSession = session;
+        console.log("Caching session");
         sessionPromise = null; // clear the promise after initialization
         return session;
       });
