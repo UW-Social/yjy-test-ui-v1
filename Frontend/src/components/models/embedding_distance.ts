@@ -4,8 +4,8 @@ import * as ort from 'onnxruntime-web';
 ort.env.wasm.wasmPaths =
   'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/';
 
-// ort.env.wasm.proxy = true;
-// ort.env.logLevel = 'verbose';
+ort.env.wasm.proxy = true;
+ort.env.logLevel = 'verbose';
 
 let cachedSession: ort.InferenceSession | null = null;
 let sessionPromise: Promise<ort.InferenceSession> | null = null;
@@ -19,8 +19,6 @@ async function initializeORT() {
   if (ortInitialized) return;
   
   ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/';
-  ort.env.wasm.proxy = true;
-  ort.env.logLevel = 'verbose';
   
   ortInitialized = true;
 }
@@ -43,7 +41,6 @@ export function getTokenizer(modelName?: string) {
 
   return tokenizerPromise;
 }
-
 
 /**
  * Load and cache the ONNX model session.
@@ -81,6 +78,7 @@ export async function getPhraseVec(
       getTokenizer(modelName),
       getSession(modelPath),
     ]);
+    console.log('Tokenizer and session loaded.');
 
     const maxLen = 32;
 
