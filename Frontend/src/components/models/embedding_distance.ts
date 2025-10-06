@@ -50,6 +50,8 @@ export async function getSession(modelPath?: string): Promise<ort.InferenceSessi
 
   await initializeORT(); // Ensure ORT is initialized before creating session
 
+  console.log("Checking promise");
+
   if (!sessionPromise) {
     sessionPromise = ort.InferenceSession.create(modelPath ?? '/models/model_qint8_arm64.onnx')
       .then((session) => {
