@@ -30,7 +30,7 @@ let tokenizerPromise: Promise<any> | null = null;
 export function getTokenizer(modelName?: string) {
   if (cachedTokenizer) return Promise.resolve(cachedTokenizer);
 
-  console.log("checking tok promise")
+  console.log("checking tok promise");
   if (!tokenizerPromise) {
     tokenizerPromise = AutoTokenizer.from_pretrained(modelName ?? 'sentence-transformers/paraphrase-MiniLM-L3-v2')
       .then((tok) => {
