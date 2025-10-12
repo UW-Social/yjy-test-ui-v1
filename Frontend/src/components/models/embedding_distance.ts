@@ -56,7 +56,7 @@ export async function getSession(modelPath?: string): Promise<ort.InferenceSessi
 
   if (!sessionPromise) {
     console.log("No promise found");
-    sessionPromise = ort.InferenceSession.create('./models/model_qint8_arm64.onnx')
+    sessionPromise = ort.InferenceSession.create('/models/model_qint8_arm64.onnx')
       .then((session) => {
         console.log("Beginning session creation");
         cachedSession = session;
