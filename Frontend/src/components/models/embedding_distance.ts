@@ -47,10 +47,10 @@ export function getTokenizer(modelName?: string) {
 /**
  * Load and cache the ONNX model session.
  */
-export async function getSession(modelPath?: string): Promise<ort.InferenceSession> {
-  if (cachedSession) return cachedSession;
+export function getSession(modelPath?: string): Promise<ort.InferenceSession> {
+  if (cachedSession) return Promise.resolve(cachedSession);
 
-  await initializeORT(); // Ensure ORT is initialized before creating session
+  initializeORT(); // Ensure ORT is initialized before creating session
 
   console.log("Checking promise");
 
