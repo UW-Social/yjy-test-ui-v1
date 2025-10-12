@@ -63,6 +63,8 @@ export async function getSession(modelPath?: string): Promise<ort.InferenceSessi
         console.log("Caching session");
         sessionPromise = null; // clear the promise after initialization
         return session;
+      }).catch(err => {
+        console.log("Something went wrong:", err);
       });
   }
 
