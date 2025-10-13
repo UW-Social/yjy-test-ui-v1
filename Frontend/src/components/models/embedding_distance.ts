@@ -4,8 +4,8 @@ import * as ort from 'onnxruntime-web';
 ort.env.wasm.wasmPaths =
   'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/';
 
-// ort.env.wasm.proxy = true;
-// ort.env.logLevel = 'verbose';
+ort.env.wasm.proxy = true;
+ort.env.logLevel = 'verbose';
 
 let cachedSession: ort.InferenceSession | null = null;
 let sessionPromise: Promise<ort.InferenceSession> | null = null;
@@ -19,8 +19,6 @@ async function initializeORT() {
   if (ortInitialized) return;
   
   ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/';
-  ort.env.wasm.proxy = true;
-  ort.env.logLevel = 'verbose';
   
   ortInitialized = true;
 }
@@ -32,6 +30,7 @@ let tokenizerPromise: Promise<any> | null = null;
 export function getTokenizer(modelName?: string) {
   if (cachedTokenizer) return Promise.resolve(cachedTokenizer);
 
+  console.log("checking tok promise");
   if (!tokenizerPromise) {
     tokenizerPromise = AutoTokenizer.from_pretrained(modelName ?? 'sentence-transformers/paraphrase-MiniLM-L3-v2')
       .then((tok) => {
@@ -41,24 +40,31 @@ export function getTokenizer(modelName?: string) {
       });
   }
 
+  console.log("loaded token");
   return tokenizerPromise;
 }
-
 
 /**
  * Load and cache the ONNX model session.
  */
-export async function getSession(modelPath?: string): Promise<ort.InferenceSession> {
-  if (cachedSession) return cachedSession;
+export function getSession(modelPath?: string): Promise<ort.InferenceSession> {
+  if (cachedSession) return Promise.resolve(cachedSession);
 
-  await initializeORT(); // Ensure ORT is initialized before creating session
+  initializeORT(); // Ensure ORT is initialized before creating session
+
+  console.log("Checking promise");
 
   if (!sessionPromise) {
-    sessionPromise = ort.InferenceSession.create(modelPath ?? '/models/model_qint8_arm64.onnx')
+    console.log("No promise found");
+    sessionPromise = ort.InferenceSession.create('/models/model_qint8_arm64.onnx')
       .then((session) => {
+        console.log("Beginning session creation");
         cachedSession = session;
+        console.log("Caching session");
         sessionPromise = null; // clear the promise after initialization
         return session;
+      }).catch(err => {
+        console.log("Something went wrong:", err);
       });
   }
 
@@ -81,6 +87,7 @@ export async function getPhraseVec(
       getTokenizer(modelName),
       getSession(modelPath),
     ]);
+    console.log('Tokenizer and session loaded.');
 
     const maxLen = 32;
 
