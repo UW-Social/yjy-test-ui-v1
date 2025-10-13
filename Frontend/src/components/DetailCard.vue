@@ -131,6 +131,15 @@ const handleDelete = async () => {
 
 console.log('[DetailCard.vue] props.event:', props.event);
 
+export async function loadGoogleMaps() {
+  const { Loader } = await import('@googlemaps/js-api-loader');
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+  if (!apiKey) throw new Error('VITE_GOOGLE_MAPS_API_KEY is missing');
+  const loader = new Loader({ apiKey, version: 'weekly', libraries: ['places'] });
+  await loader.load();
+  return window.google;
+}
+
 // 监听内容变化
 nextTick(() => {
   checkScrollable();
