@@ -2,20 +2,20 @@
   <div class="events-page">
     <!-- 背景容器 -->
     <div class="background-container">
-      <img src="/svg/eventsbg.svg" alt="Events Background" class="background-svg" />
+      <img src="/svg/eventsbg.svg" alt="Clubs Background" class="background-svg" />
     </div>
 
     <div class="overlapping-page">
-      <div class="events-page-with-search" v-if="!selectedEvent">
+      <div class="events-page-with-search">
         <div class="events-content">
           <!-- 搜索框和排序容器 -->
           <div class="search-bar-container">
             <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search events..."
-            class="search-bar"
-            @keyup.enter="handleSearch"
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search clubs..."
+              class="search-bar"
+              @keyup.enter="handleSearch"
             />
             
             <!-- 排序选择器 -->
@@ -23,63 +23,44 @@
               <label class="sort-label">Sort by:</label>
               <select v-model="sortType" class="sort-dropdown">
                 <option value="recommended">Recommended</option>
-                <option value="nearest">Nearest</option>
-                <option value="farthest">Farthest</option>
+                <option value="members">Members</option>
               </select>
             </div>
           </div>
 
-          <!-- 事件列表 -->
+          <!-- 俱乐部列表 -->
           <el-main class="event-list-container">
-            <EventList :category="categoryFilter" :search="searchQuery" :sort="sortType" @open-card="setSelectedEvent" />
+            <ClubList :category="categoryFilter" :search="searchQuery" :sort="sortType" @open-card="setSelectedClub" />
           </el-main>
         </div>
-      </div>
-      
-      <!-- Detail Card -->
-      <div v-if="selectedEvent" class="detail-card-overlay" @click.self="clearSelectedEvent">
-        <DetailCard :event="selectedEvent" :currentUserId="currentUserId" @close="clearSelectedEvent" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import EventList from '../components/EventList.vue';
-import DetailCard from '../components/DetailCard.vue';
+import { ref, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import ClubList from '../components/ClubList.vue';
 import '../assets/sidebar.css';
-import { useUserStore } from '../stores/user';
-import { setSelectedEvent, clearSelectedEvent, useSelectedEvent, mountKeyDownListener, unmountKeyDownListener } from '../utils/eventUtils';
+import { type Club } from '../types/club';
 
-const route = useRoute();
 const router = useRouter();
-const userStore = useUserStore();
-const currentUserId = computed(() => userStore.userProfile?.uid);
-
-// 获取选中的活动的 ref
-const selectedEvent = useSelectedEvent();
+const route = useRoute();
 
 const categoryFilter = ref('');
 const searchQuery = ref('');
 const sortType = ref('recommended'); // 默认为推荐排序
 const isUpdatingFromUrl = ref(false); // 标记是否正在从 URL 更新
 
-// 挂载和卸载事件监听器
+// 从 URL 查询参数初始化搜索
 onMounted(() => {
-  mountKeyDownListener();
-  // 从 URL 查询参数初始化搜索
   const q = route.query.q as string;
   if (q) {
     isUpdatingFromUrl.value = true;
     searchQuery.value = q;
     isUpdatingFromUrl.value = false;
   }
-});
-
-onUnmounted(() => {
-  unmountKeyDownListener();
 });
 
 // 监听路由查询参数变化
@@ -106,12 +87,18 @@ watch(searchQuery, (newVal) => {
   }
 });
 
+const setSelectedClub = (club: Club) => {
+  // 跳转到详情页
+  router.push(`/clubs/${club.id}`);
+};
+
 const handleSearch = () => {
   console.log('Search initiated for:', searchQuery.value);
 };
 </script>
 
 <style scoped>
+/* Align overall layout to Events page */
 .events-page {
   position: relative;
   overflow: hidden;
@@ -143,32 +130,32 @@ const handleSearch = () => {
 }
 
 .events-content {
-  display: flex; /* 使用 flex 布局 */
-  flex: 1; /* 占据剩余空间 */
-  gap: 1rem; /* 搜索框和事件列表之间的间距 */
-  align-items: flex-start; /* 顶部对齐，避免换行时垂直居中 */
-  flex-wrap: nowrap; /* 强制不换行，保持左右两列 */
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: nowrap; /* 保持两列布局 */
 }
 
 .search-bar-container {
   display: flex;
-  flex-direction: column; /* 垂直排列搜索框和按钮 */
-  justify-content: flex-start; /* 搜索框靠顶部对齐 */
-  align-items: flex-start; /* 搜索框靠左对齐 */
-  padding: 3rem 0 1rem 2.5rem; /* 上下边距为3rem，左右边距为1rem */
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 3rem 0 1rem 2.5rem;
   border-radius: 8px;
-  width: 260px; /* 搜索框容器宽度 */
-  flex: 0 0 260px; /* 固定列宽，防止与右侧挤压换行 */
-  flex-shrink: 0; /* 不缩小 */
+  width: 260px;
+  flex: 0 0 260px;
+  flex-shrink: 0;
 }
 
 .search-bar {
   color: #828282;
-  width: 100%; /* 搜索框宽度占满容器 */
+  width: 100%;
   padding: 0.8rem;
   border: 1px solid #000000;
   border-radius: 10px;
-  box-shadow: 0 rgba(0, 0, 0, 0.1)  2px 4px;
+  box-shadow: 0 rgba(0, 0, 0, 0.1) 2px 4px;
   font-size: 1rem;
 }
 
@@ -188,83 +175,17 @@ const handleSearch = () => {
 }
 
 .events-page-with-search .el-main {
-  margin: 0; /* Reset margin */
+  margin: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0; /* 允许在 flex 容器内收缩，避免强制换行 */
+  min-width: 0;
 }
 
 .event-list-container {
-  flex: 1; /* 事件列表占据剩余空间 */
+  flex: 1;
   display: flex;
   flex-direction: column;
-}
-
-.events-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center; /* 保证按钮和标题垂直居中 */
-  margin-bottom: 0rem;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.events-header h2 {
-  color: #6c63ff;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-h1 {
-  color: #333;
-  margin: 0;
-  font-size: 2rem;
-}
-
-.publish-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(90deg, #b388eb 0%, #6c63ff 100%);
-  color: #fff;
-  padding: 0.8rem 1.5rem;
-  border-radius: 25px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: background-color 0.3s;
-  margin-right: 0; /* 去掉原来的 margin-right: 50px; */
-  border: none;
-  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.08);
-}
-
-.publish-btn:hover {
-  background: linear-gradient(90deg, #9c6ad6 0%, #6c63ff 100%);
-}
-
-.icon {
-  font-size: 1.2rem;
-}
-
-.detail-card-container {
-  margin-top: 100px;
-  border: none;
-}
-
-.detail-card-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  z-index: 1000;
-  overflow-y: auto;
-  padding: 20px 0;
 }
 
 /* 排序选择器样式 */
@@ -305,6 +226,12 @@ h1 {
 .sort-dropdown:focus {
   border-color: #6c63ff;
   box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .events-page-with-search { 
+    padding: 1rem; 
+  }
 }
 
 @media (max-width: 576px) {

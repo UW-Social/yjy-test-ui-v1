@@ -160,8 +160,27 @@ a:hover {
 }
 
 .navbar-search {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-right: 1.5rem;
+}
+
+.search-type-select {
+  padding: 6px 8px;
+  border-radius: 16px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+  outline: none;
+  background-color: white;
+  cursor: pointer;
+  transition: border 0.2s;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+.search-type-select:focus {
+  border: 1.5px solid #6c63ff;
 }
 
 .navbar-search-input {
@@ -169,7 +188,7 @@ a:hover {
   border-radius: 16px;
   border: 1px solid #ccc;
   font-size: 1rem;
-  width: 160px;
+  width: 180px;
   outline: none;
   transition: border 0.2s;
 }

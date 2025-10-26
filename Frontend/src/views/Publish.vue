@@ -6,16 +6,47 @@
     </div>
     
     <div class="page-header">
-      <h1>Create Your Event</h1>
-      <p>Bring people together and make connections happen</p>
+      <h1>{{ publishType === 'event' ? 'Create Your Event' : 'Create Your Club' }}</h1>
+      <p>{{ publishType === 'event' ? 'Bring people together and make connections happen' : 'Start a community and grow your organization' }}</p>
+      
+      <!-- Toggle buttons -->
+      <div class="type-selector">
+        <button 
+          :class="{ active: publishType === 'event' }" 
+          @click="publishType = 'event'"
+        >
+          📅 Event
+        </button>
+        <button 
+          :class="{ active: publishType === 'club' }" 
+          @click="publishType = 'club'"
+        >
+          🏛️ Club
+        </button>
+      </div>
     </div>
     
-    <EventForm />
+    <EventForm v-if="publishType === 'event'" />
+    <ClubForm v-else @cancel="handleCancel" @success="handleSuccess" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import EventForm from '../components/EventForm.vue';
+import ClubForm from '../components/ClubForm.vue';
+
+const router = useRouter();
+const publishType = ref<'event' | 'club'>('event');
+
+const handleCancel = () => {
+  router.push('/clubs');
+};
+
+const handleSuccess = () => {
+  router.push('/clubs');
+};
 </script>
 
 <style scoped>
@@ -66,7 +97,36 @@ import EventForm from '../components/EventForm.vue';
   font-size: 1.1rem;
   color: #666;
   max-width: 500px;
-  margin: 0 auto;
+  margin: 0 auto 1.5rem;
+}
+
+.type-selector {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.type-selector button {
+  padding: 0.75rem 2rem;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.type-selector button:hover {
+  border-color: #7c3aed;
+  transform: translateY(-2px);
+}
+
+.type-selector button.active {
+  background: #7c3aed;
+  color: white;
+  border-color: #7c3aed;
 }
 
 @media (max-width: 768px) {
@@ -76,6 +136,16 @@ import EventForm from '../components/EventForm.vue';
   
   .page-header h1 {
     font-size: 2rem;
+  }
+
+  .type-selector {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0 1rem;
+  }
+
+  .type-selector button {
+    width: 100%;
   }
   
   .page-header p {

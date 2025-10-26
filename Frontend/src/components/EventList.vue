@@ -23,7 +23,11 @@ import { useUserStore } from '../stores/user';
 import { getPhraseVec, getPhraseVecBatch } from './models/embedding_distance';
 import { formatEventSchedule, type Event } from '../types/event';
 
-const props = defineProps<{ category?: string }>();
+const props = defineProps<{ 
+  category?: string;
+  search?: string;
+  sort?: string;
+}>();
 const eventStore = useEventStore();
 const userStore = useUserStore(); 
 const route = useRoute();
@@ -33,6 +37,14 @@ function sortEventsByStartTimeDesc(events: any[]) {
     const toDate = (val: any) =>
       typeof val?.toDate === 'function' ? val.toDate() : new Date(val);
     return toDate(b.startTime).getTime() - toDate(a.startTime).getTime();
+  });
+}
+
+function sortEventsByStartTimeAsc(events: any[]) {
+  return events.slice().sort((a, b) => {
+    const toDate = (val: any) =>
+      typeof val?.toDate === 'function' ? val.toDate() : new Date(val);
+    return toDate(a.startTime).getTime() - toDate(b.startTime).getTime();
   });
 }
 
@@ -137,35 +149,68 @@ async function refreshEvents() {
     return end > now;
   });
 
-  // Phase 1: default sorting (fast)
-  events = sortEventsByStartTimeDesc(events);
+  // Phase 1: default sorting based on sort type
+  if (props.sort === 'farthest') {
+    // 最远：按开始时间降序（最晚的活动在前）
+    events = sortEventsByStartTimeDesc(events);
+  } else if (props.sort === 'nearest') {
+    // 最近：按开始时间升序（最近的活动在前）
+    events = sortEventsByStartTimeAsc(events);
+  } else {
+    // recommended 或默认：保持原始顺序（数据库上传顺序）
+    // events 保持不变
+  }
   eventsAfterSemantic.value = events; // immediately display to the user
-  console.log('Initial events sorted by start time:', events.length);
+  console.log('Initial events sorted:', events.length, 'sort type:', props.sort);
 
-  const q = (route.query.q as string || '').trim();
-  if (!userStore.isLoggedIn || !userStore.userProfile?.tags?.length) return;
-
-  // Phase 2: ML ranking in background
-  makeInterestTagEventsFirstSemantic(events).then((mlSortedEvents) => {
-    if (!q) {
-      eventsAfterSemantic.value = mlSortedEvents; // update displayed list
-    } else {
-      // merge Fuse.js search on top of ML ranking
-      const fuse = new Fuse(mlSortedEvents, {
-        keys: ['title','description','location','tags','organizerName'],
-        threshold: 0.4,
-        ignoreLocation: true,
-        minMatchCharLength: 2,
-      });
-      eventsAfterSemantic.value = sortEventsByStartTimeDesc(
-        fuse.search(q).map(r => r.item)
-      );
+  // 获取搜索关键词（优先使用 props.search，其次使用 URL query）
+  const q = (props.search || route.query.q as string || '').trim();
+  
+  // 如果有搜索词，立即应用搜索
+  if (q) {
+    const fuse = new Fuse(events, {
+      keys: [
+        { name: 'title', weight: 2 },
+        { name: 'tags', weight: 1.5 },
+        { name: 'organizerName', weight: 1.2 },
+        { name: 'description', weight: 1 },
+        { name: 'location', weight: 0.8 },
+      ],
+      threshold: 0.3,
+      distance: 80,
+      ignoreLocation: true,
+      minMatchCharLength: 2,
+      includeScore: true,
+      shouldSort: true,              // 自动按相关度排序（分数越低越相关）
+    });
+    const searchResults = fuse.search(q);
+    
+    // 打印前5个结果的分数，便于调试
+    console.log('[EventList] Search results:', searchResults.length, 'for query:', q);
+    searchResults.slice(0, 5).forEach((result, index) => {
+      console.log(`  ${index + 1}. "${result.item.title}" - score: ${result.score?.toFixed(3)}`);
+    });
+    
+    // 搜索结果根据排序类型进行排序
+    let sortedResults = searchResults.map(r => r.item);
+    if (props.sort === 'recommended') {
+      // recommended: 保持 Fuse.js 的搜索权重排序
+      // sortedResults 已经按搜索相关度排序，不需要额外处理
+    } else if (props.sort === 'farthest') {
+      sortedResults = sortEventsByStartTimeDesc(sortedResults);
+    } else if (props.sort === 'nearest') {
+      sortedResults = sortEventsByStartTimeAsc(sortedResults);
     }
-  });
+    
+    eventsAfterSemantic.value = sortedResults;
+    return; // 有搜索时直接返回
+  }
+  
+  // 没有搜索词时，events 已经根据 sort type 排序好了，直接使用
 }
 
 
-watch([() => props.category, () => userStore.isLoggedIn], refreshEvents, { immediate: true });
+watch([() => props.category, () => props.search, () => props.sort, () => userStore.isLoggedIn], refreshEvents, { immediate: true });
 
 const filteredEvents = computed(() => {
   // Just return the pre-filtered async data (sync now)

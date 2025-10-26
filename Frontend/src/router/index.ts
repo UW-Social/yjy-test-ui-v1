@@ -42,6 +42,19 @@ const routes = [
     props: true
   },
   {
+    path: '/clubs',
+    name: 'Clubs',
+    component: isMobile()
+      ? () => import('../views/Clubs.vue')
+      : () => import('../views/Clubs.vue')
+  },
+  {
+    path: '/clubs/:id',
+    name: 'ClubDetail',
+    component: () => import('../views/ClubDetail.vue'),
+    props: true
+  },
+  {
     path: '/publish',
     name: 'Publish',
     component: () => import('../views/Publish.vue'),

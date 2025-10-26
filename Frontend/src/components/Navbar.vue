@@ -17,26 +17,7 @@
               <li><router-link to="/events">EVENTS</router-link></li>
             </div>
             <div :class="{ active: $route.path === '/clubs' }">
-              <li>
-                <el-popover
-                  width="200"
-                  trigger="click"
-                  v-model="isPopConfirmVisible"
-                  popper-class="custom-popover"
-                >
-                  <template #reference>
-                    <div @click.prevent="showPopover">
-                      <router-link to="#">CLUBS</router-link>
-                    </div>
-                  </template>
-                  <template #default>
-                    <div class="popover-content">
-                      <p class="popover-text">This feature is under development</p>
-                      <button class="popover-button" @click="isPopConfirmVisible = false">OK</button>
-                    </div>
-                  </template>
-                </el-popover>
-              </li>
+              <li><router-link to="/clubs">CLUBS</router-link></li>
             </div>
             <div v-if="isWeb" :class="{ active: $route.path === '/publish' }">
               <li><router-link to="/publish">PUBLISH</router-link></li>
@@ -48,21 +29,25 @@
         </div>
 
         <div class="right-link">
-          <!-- 搜索框放在右侧导航项前面 -->
-          <div v-if="isWeb" class="navbar-search">
+          <!-- 搜索框：仅在 Home 和 Publish 页面显示 -->
+          <div v-if="isWeb && shouldShowSearch" class="navbar-search">
+            <select v-model="searchType" class="search-type-select">
+              <option value="events">Events</option>
+              <option value="clubs">Clubs</option>
+            </select>
             <input
               v-model="navbarSearch"
               @keyup.enter="handleNavbarSearch"
               type="text"
-              placeholder="Search events..."
+              :placeholder="`Search ${searchType}...`"
               class="navbar-search-input"
-              title="type in event title, tag, or organizer's name"
+              :title="`Search for ${searchType} by name, tags, or description`"
             />
           </div>
           <div class="user-profile">
             <div v-if="userStore.isLoggedIn && userStore.userProfile?.displayName" class="avatar-logout">
               <img 
-                :src="userStore.userProfile.photoURL"
+                :src="userStore.userProfile.photoURL || '/images/default-avatar.png'"
                 alt="User Avatar"
                 class="user-avatar"
                 @click="navigateToProfile"
@@ -80,17 +65,22 @@
 </template>
 
 <script setup lang="ts">
-import { el, fa } from 'element-plus/es/locales.mjs';
 import '../assets/navbar.css';
 import { useUserStore } from '../stores/user'
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 
 const userStore = useUserStore()
 const router = useRouter()
+const route = useRoute()
 const navbarSearch = ref('');
+const searchType = ref<'events' | 'clubs'>('events');
 const isWeb = ref(window.innerWidth > 576);
-const isPopConfirmVisible = ref(false);
+
+// 只在非 events 和非 clubs 页面显示搜索框
+const shouldShowSearch = computed(() => {
+  return route.path !== '/events' && route.path !== '/clubs';
+});
 
 const navigateToProfile = () => {
   router.push('/profile');
@@ -107,59 +97,12 @@ const handleLogout = async () => {
 
 function handleNavbarSearch() {
   if (navbarSearch.value.trim()) {
-    router.push({ path: '/events', query: { q: navbarSearch.value.trim() } });
+    const path = searchType.value === 'events' ? '/events' : '/clubs';
+    router.push({ path, query: { q: navbarSearch.value.trim() } });
     navbarSearch.value = '';
-  }
-}
-
-function showPopover() {
-  isPopConfirmVisible.value = true;
-   // Google Analytics 事件追踪
-  if (typeof window.gtag === 'function') {
-    window.gtag('event', 'click', {
-      'event_category': 'Navigation',
-      'event_label': 'CLUBS',
-      'value': 1
-    });
-  } else {
-    console.warn('Google Analytics gtag is not defined.');
   }
 }
 </script>
 
 <style>
-.popover-content {
-  display: flex;
-  flex-direction: column;
-  /* align-items: center; */
-  justify-content: center;
-  padding: 0 1rem;
-  text-align: center;
-}
-
-.popover-icon {
-  font-size: 2rem;
-  color: #f56c6c;
-  margin-bottom: 0.5rem;
-}
-
-.popover-text {
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 1rem;
-}
-
-.popover-button {
-  background-color: #6c63ff;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.popover-button:hover {
-  background-color: #9c6ad6;
-}
 </style>
