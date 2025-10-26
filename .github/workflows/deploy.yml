@@ -32,6 +32,9 @@ jobs:
           if [ "${{ github.repository }}" = "UW-Social/uw-social.github.io" ]; then
             echo VITE_URL="uw-social.com" >> .env
             echo VITE_BASE_PATH="/" >> .env
+          elif [ "${{ github.repository }}" = "UW-Social/test" ]; then
+            echo VITE_URL="uw-social.github.io/test" >> .env
+            echo VITE_BASE_PATH="/test/" >> .env
           elif [ "${{ github.repository }}" = "UW-Social/alpha" ]; then
             echo VITE_URL="uw-social.com/alpha" >> .env
             echo VITE_BASE_PATH="/alpha/" >> .env
