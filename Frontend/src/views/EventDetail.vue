@@ -1,4 +1,4 @@
-<template>
+z<template>
   <div class="event-detail-page">
     <!-- 返回按钮 -->
     <button @click="goBack" class="back-button">
