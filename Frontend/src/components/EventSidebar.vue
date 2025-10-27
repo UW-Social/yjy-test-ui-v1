@@ -1,57 +1,55 @@
 <template>
-  <div class="clubs-page">
-    <div class="clubs-container">
-      <!-- Sidebar -->
-      <div class="clubs-sidebar">
-        <!-- Search -->
-        <div class="sidebar-search">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search clubs..."
-            class="sidebar-search-input"
-            @input="handleSearch"
-          />
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
-            <line x1="16.65" y1="16.65" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-        </div>
-
-        <!-- Sort -->
-        <div class="sidebar-sort">
-          <label class="sidebar-label">Sort by</label>
-          <select ref="sortSelectRef" v-model="sortType" @change="handleSort" class="sidebar-select">
-            <option value="recommended">Recommended</option>
-            <option value="members">Members</option>
-            <option value="newest">Newest</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Main Content -->
-      <div class="clubs-main">
-        <ClubList :search="searchQuery" :sort="sortType" @open-card="setSelectedClub" />
-      </div>
+  <div class="event-sidebar">
+    <!-- Search Box -->
+    <div class="sidebar-search">
+      <input
+        v-model="localSearch"
+        type="text"
+        placeholder="Search events..."
+        class="sidebar-search-input"
+        @input="handleSearchChange"
+      />
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+        <line x1="16.65" y1="16.65" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
     </div>
 
-    <!-- Back to Top Button -->
-    <BackToTop />
+    <!-- Sort By Dropdown -->
+    <div class="sidebar-sort">
+      <label class="sidebar-label">Sort by</label>
+      <select
+        ref="sortSelectRef"
+        v-model="localSort"
+        @change="handleSortChange"
+        class="sidebar-select"
+      >
+        <option value="recommended">Recommended</option>
+        <option value="nearest">Nearest</option>
+        <option value="farthest">Farthest</option>
+      </select>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import ClubList from '../components/ClubList.vue';
-import BackToTop from '../components/BackToTop.vue';
-import { type Club } from '../types/club';
 
-const router = useRouter();
-const route = useRoute();
+// Props
+const props = defineProps<{
+  search?: string;
+  sort?: string;
+}>();
 
-const searchQuery = ref('');
-const sortType = ref('recommended');
+// Emits
+const emit = defineEmits<{
+  (e: 'update:search', value: string): void;
+  (e: 'update:sort', value: string): void;
+}>();
+
+// Local state
+const localSearch = ref(props.search || '');
+const localSort = ref(props.sort || 'recommended');
 const sortSelectRef = ref<HTMLSelectElement | null>(null);
 
 let isMounted = false;
@@ -105,33 +103,27 @@ const scheduleFit = () => {
   });
 };
 
-// Watch route query
-watch(() => route.query.q, (newQuery) => {
-  if (newQuery) {
-    searchQuery.value = newQuery as string;
-  }
-}, { immediate: true });
+// Watch for prop changes
+watch(() => props.search, (newVal) => {
+  localSearch.value = newVal || '';
+});
 
-const handleSearch = () => {
-  // Search logic handled by ClubList component
-};
-
-const handleSort = () => {
-  // Sort logic handled by ClubList component
-};
-
-const setSelectedClub = (club: Club) => {
-  router.push(`/clubs/${club.id}`);
-};
-
-watch(sortType, () => {
+watch(() => props.sort, (newVal) => {
+  localSort.value = newVal || 'recommended';
   if (isMounted) nextTick(scheduleFit);
 });
 
-watch(() => route.path, (newPath) => {
-  if (newPath === '/clubs') {
-    if (isMounted) nextTick(scheduleFit);
-  }
+// Event handlers
+const handleSearchChange = () => {
+  emit('update:search', localSearch.value);
+};
+
+const handleSortChange = () => {
+  emit('update:sort', localSort.value);
+};
+
+watch(localSort, () => {
+  if (isMounted) nextTick(scheduleFit);
 });
 
 onMounted(() => {
@@ -149,28 +141,22 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.clubs-page {
-  min-height: 100vh;
-  background-color: var(--color-white);
-  padding-top: calc(var(--navbar-height) - var(--spacing-2xl));
-}
+/**
+ * Event Sidebar - Simplified, Minimal Design
+ */
 
-.clubs-container {
-  display: flex;
-  min-height: calc(100vh - var(--navbar-height));
-}
-
-/* Sidebar */
-.clubs-sidebar {
+.event-sidebar {
   width: var(--sidebar-width);
   background: var(--color-white);
   border-right: none;
-  /* Match Events page: remove right padding so the gap to cards equals the main content's right padding */
+  /* Keep internal left padding for nice inset; set right padding to 0 so
+     the gap between sidebar and event list equals the main content's right padding. */
   padding: var(--spacing-lg) 0 var(--spacing-md) var(--spacing-3xl);
   flex-shrink: 0;
   box-shadow: none;
 }
 
+/* Search Box */
 .sidebar-search {
   margin-bottom: var(--spacing-lg); /* move Sort row closer to search */
   position: relative;
@@ -208,6 +194,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 3px var(--color-primary-bg);
 }
 
+/* Sort Dropdown */
 .sidebar-sort {
   margin-bottom: var(--spacing-lg);
   display: grid;
@@ -258,21 +245,29 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 3px var(--color-primary-bg);
 }
 
-/* Main Content */
-.clubs-main {
-  padding: 0 var(--spacing-3xl);
-  flex: 1;
+/* Scrollbar Styling */
+.event-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.event-sidebar::-webkit-scrollbar-track {
+  background: var(--color-gray-100);
+  border-radius: 3px;
+}
+
+.event-sidebar::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: 3px;
+}
+
+.event-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .clubs-sidebar {
+  .event-sidebar {
     display: none;
-  }
-
-  .clubs-main {
-    margin-left: 0;
-    padding: var(--spacing-md);
   }
 }
 </style>

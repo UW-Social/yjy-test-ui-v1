@@ -38,7 +38,9 @@ const routes = [
   {
     path: '/events/:id',
     name: 'EventDetail',
-    component: () => import('@/components/mobile/MobileEventDetail.vue'),
+    component: isMobile()
+      ? () => import('@/components/mobile/MobileEventDetail.vue')
+      : () => import('@/views/EventDetail.vue'),
     props: true
   },
   {
@@ -79,7 +81,8 @@ export function isMobile() {
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
-    next('/login')
+    // 保存原始目标路径，登录后可以返回
+    next({ path: '/login', query: { redirect: to.fullPath } })
   } else {
     next()
   }

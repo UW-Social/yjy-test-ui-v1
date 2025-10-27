@@ -4,26 +4,25 @@
       <div class="nav-items">
         <div class="left-link">
           <div class="nav-left">
-            <li>
-              <router-link to="/">
-                <img src="/svg/uw-social-logo1.svg" alt="UW Social Logo" class="logo">
-                <img src="/svg/UW-SOCIAL.svg" alt="UW SOCIAL" class="logo-text">
+            <li class="logo-container">
+              <router-link to="/" class="logo-link">
+                <span class="logo-text-brand">UW Social</span>
               </router-link>
             </li>
             <div :class="{ active: $route.path === '/' }">
-              <li><router-link to="/">HOME</router-link></li>
+              <li><router-link to="/">Home</router-link></li>
             </div>
             <div :class="{ active: $route.path === '/events' }">
-              <li><router-link to="/events">EVENTS</router-link></li>
+              <li><router-link to="/events">Events</router-link></li>
             </div>
             <div :class="{ active: $route.path === '/clubs' }">
-              <li><router-link to="/clubs">CLUBS</router-link></li>
+              <li><router-link to="/clubs">Clubs</router-link></li>
             </div>
             <div v-if="isWeb" :class="{ active: $route.path === '/publish' }">
-              <li><router-link to="/publish">PUBLISH</router-link></li>
+              <li><router-link to="/publish">Publish</router-link></li>
             </div>
             <div v-if="isWeb && userStore.isLoggedIn && userStore.userProfile?.displayName" :class="{ active: $route.path === '/profile' }">
-              <li><router-link to="/profile">PROFILE</router-link></li>
+              <li><router-link to="/profile">Profile</router-link></li>
             </div>
           </div>
         </div>

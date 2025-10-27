@@ -23,7 +23,7 @@ import { useUserStore } from '../stores/user';
 import { getPhraseVec, getPhraseVecBatch } from './models/embedding_distance';
 import { formatEventSchedule, type Event } from '../types/event';
 
-const props = defineProps<{ 
+const props = defineProps<{
   category?: string;
   search?: string;
   sort?: string;
@@ -143,7 +143,7 @@ async function refreshEvents() {
   // Only show upcoming events
   const now = new Date();
   events = events.filter(e => {
-    const end = typeof e.endtime?.toDate === 'function' 
+    const end = typeof e.endtime?.toDate === 'function'
       ? e.endtime.toDate()
       : new Date(e.endtime);
     return end > now;
@@ -243,33 +243,31 @@ const hideDetailCard = () => {
 
 <style scoped>
 .event-list {
-    padding: 1rem;
+    padding: 0;
+    margin: 0;
 }
 
 .loading,
 .no-events {
     text-align: center;
-    padding: 2rem;
-    color: #666;
-    font-size: 1.1rem;
+    padding: var(--spacing-3xl);
+    color: var(--color-gray-600);
+    font-size: var(--font-size-lg);
 }
 
 .events-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr); /* 固定1列 */
-    gap: 2.1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     box-sizing: border-box;
     padding: 0;
+    margin: 0;
 }
 
 @media (max-width: 576px) {
     .events-grid {
-        /* grid-template-columns: repeat(2, 1fr); */
-        gap: 1rem 0.5rem;
-        width: 100%;
-        box-sizing: border-box;
-        padding: 0.2rem 0;
+        padding: 0;
+        margin: 0;
     }
 }
 </style>

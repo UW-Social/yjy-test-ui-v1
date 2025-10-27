@@ -194,31 +194,30 @@ const filteredClubs = computed(() => {
 
 <style scoped>
 .event-list {
-  padding: 1rem;
+  padding: 0;
+  margin: 0;
 }
 
 .loading {
   text-align: center;
-  padding: 2rem;
-  color: #666;
-  font-size: 1.1rem;
+  padding: var(--spacing-3xl);
+  color: var(--color-gray-600);
+  font-size: var(--font-size-lg);
 }
 
 .events-grid {
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  gap: 2.1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   box-sizing: border-box;
   padding: 0;
+  margin: 0;
 }
 
 @media (max-width: 576px) {
   .events-grid {
-    gap: 1rem 0.5rem;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0.2rem 0;
+    padding: 0;
+    margin: 0;
   }
 }
 </style>

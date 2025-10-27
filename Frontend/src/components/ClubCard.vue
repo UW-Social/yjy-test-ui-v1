@@ -4,26 +4,45 @@
     <div class="event-card-content">
       <!-- 左侧内容 -->
       <div class="event-card-left">
-        <h3 class="event-title">{{ club.name }}</h3>
-        <p class="description">{{ club.description }}</p>
-        <div v-if="club.link" class="event-link">
-          <a :href="club.link" target="_blank" rel="noopener noreferrer">Learn More</a>
+        <div>
+          <h3 class="event-title">{{ club.name }}</h3>
+          <p class="description">{{ club.description }}</p>
+        </div>
+
+        <!-- Tags -->
+        <div v-if="club.tags && club.tags.length > 0" class="event-tags">
+          <span v-for="tag in club.tags.slice(0, 5)" :key="tag" class="tag-badge">
+            {{ tag }}
+          </span>
         </div>
       </div>
       <!-- 右侧内容 -->
       <div class="event-card-right">
-        <p class="event-time">{{ club.meetingSchedule || 'Meeting schedule TBD' }}</p>
-        <p class="event-location">Location: {{ club.location || 'TBD' }}</p>
-        <p class="event-location">Category: {{ formatClubCategory(club.category) }}</p>
-        <p v-if="club.memberCount" class="event-location">Members: {{ club.memberCount }}</p>
+        <div class="event-meta">
+          <p class="meta-item" v-if="club.meetingSchedule">
+            <span class="meta-label">Meeting:</span>
+            <span class="meta-value">{{ club.meetingSchedule }}</span>
+          </p>
+          <p class="meta-item">
+            <span class="meta-label">Location:</span>
+            <span class="meta-value">{{ club.location || 'TBD' }}</span>
+          </p>
+          <p class="meta-item">
+            <span class="meta-label">Category:</span>
+            <span class="meta-value">{{ formatClubCategory(club.category) }}</span>
+          </p>
+          <p class="meta-item" v-if="club.memberCount">
+            <span class="meta-label">Members:</span>
+            <span class="meta-value">{{ club.memberCount }}</span>
+          </p>
+        </div>
         <el-button
           v-if="String(club.organizerId) === String(currentUserId)"
           @click.stop="handleDelete"
           type="primary"
           round
           size="small"
-          class="delete-btn purple-btn"
-          style="margin-top: 1rem;"
+          class="delete-btn"
         >
           Delete
         </el-button>
@@ -65,24 +84,21 @@ const handleDelete = async () => {
 </script>
 
 <style scoped>
-/* Use eventcard.css for layout and keep only button tweaks here */
-.delete-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(128, 0, 255, 0.08);
-  background: #7c3aed !important;
-  border-color: #7c3aed !important;
-  color: #fff !important;
-  transition: background 0.2s, box-shadow 0.2s;
+/* Club card - tighter spacing for more info to fit */
+.event-card-right .event-meta {
+  gap: var(--spacing-xs);
 }
 
-.delete-btn:hover {
-  background: #a78bfa !important;
-  border-color: #a78bfa !important;
-  color: #fff !important;
-  box-shadow: 0 4px 16px rgba(128, 0, 255, 0.15);
+.event-card-right .meta-item {
+  gap: 2px;
+}
+
+.event-card-right .meta-label {
+  font-size: var(--font-size-xs);
+}
+
+.event-card-right .meta-value {
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
 }
 </style>

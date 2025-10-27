@@ -233,10 +233,11 @@ const handleSubmit = async () => {
 }
 
 .form-container {
-  background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: var(--color-white);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md) !important;
+  padding: var(--spacing-3xl);
+  box-shadow: none !important;
 }
 
 h2 {
@@ -265,7 +266,7 @@ h2 {
 }
 
 label {
-  font-weight: 600;
+  font-weight: 300;
   color: #333;
   font-size: 0.95rem;
 }
@@ -273,19 +274,22 @@ label {
 input,
 textarea,
 select {
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s;
+  padding: var(--spacing-md);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md) !important;
+  box-shadow: none !important;
+  font-size: var(--font-size-base);
+  transition: border-color 0.2s;
   font-family: inherit;
+  background: var(--color-white);
 }
 
 input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: #7c3aed;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-bg) !important;
 }
 
 textarea {
@@ -307,38 +311,44 @@ small {
 .cancel-btn,
 .submit-btn {
   flex: 1;
-  padding: 1rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  padding: var(--spacing-lg);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md) !important;
+  box-shadow: none !important;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 
 .cancel-btn {
-  background: #f0f0f0;
-  color: #666;
+  background: var(--color-white);
+  color: var(--color-gray-700);
+  border-color: var(--border-color);
 }
 
 .cancel-btn:hover {
-  background: #e0e0e0;
+  background: var(--color-gray-50);
+  border-color: var(--color-gray-300);
+  box-shadow: none !important;
 }
 
 .submit-btn {
-  background: #7c3aed;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #6d28d9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  box-shadow: none !important;
 }
 
 .submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  box-shadow: none !important;
 }
 
 @media (max-width: 768px) {
